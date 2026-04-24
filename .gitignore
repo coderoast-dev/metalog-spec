@@ -1,0 +1,10 @@
+# Editor / build / test artifacts
+.DS_Store
+*.swp
+*~
+node_modules/
+.venv/
+__pycache__/
+*.log
+.idea/
+.vscode/
