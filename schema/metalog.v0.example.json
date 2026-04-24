@@ -1,92 +1,95 @@
 {
-  "metalog_version": "0.1.0",
-  "producer": {
-    "name": "insight",
-    "version": "0.1.0",
-    "implementation_uri": "https://github.com/.../InSight"
-  },
-  "window": {
-    "start": "2026-04-24T10:00:00Z",
-    "end":   "2026-04-24T10:05:00Z",
-    "duration_seconds": 300,
-    "lines_observed": 184273
-  },
-  "source": {
-    "service": "checkout-api",
-    "fleet":   "prod-eu-west",
-    "host_count": 12,
-    "tags": { "env": "prod", "region": "eu-west-3" }
-  },
-  "stats": {
-    "unique_templates": 87,
-    "top_k_size": 256,
-    "tail_count": 4117,
-    "tail_unique": 31,
-    "entropy_bits": 5.83,
-    "top_k": [
-      {
-        "template_id": "h:8a3f0c2db14e9077a45c2901bb6f3c01",
-        "template":    "User <*> logged in from <*>",
-        "count":       12453,
-        "frequency":   0.0676,
-        "level":       "INFO"
-      },
-      {
-        "template_id": "h:b104d18e5fa3c9028877123abcd45ef0",
-        "template":    "GET /api/v1/cart/<*> 200 <*>ms",
-        "count":       9821,
-        "frequency":   0.0533,
-        "level":       "INFO"
-      },
-      {
-        "template_id": "h:c97704f12abc887765de0091ff3e5a13",
-        "template":    "DB connection pool size=<*> in_use=<*>",
-        "count":       5212,
-        "frequency":   0.0283,
-        "level":       "DEBUG"
-      },
-      {
-        "template_id": "h:d3a87ee01122ff556677889900112233",
-        "template":    "Payment <*> failed: <*>",
-        "count":       42,
-        "frequency":   0.000228,
-        "level":       "ERROR"
-      }
-    ]
-  },
-  "behavior": {
-    "ngram_size": 2,
-    "top_ngrams_size": 64,
-    "graph_edge_count": 312,
-    "dominant_path": [
-      "h:8a3f0c2db14e9077a45c2901bb6f3c01",
-      "h:b104d18e5fa3c9028877123abcd45ef0",
-      "h:c97704f12abc887765de0091ff3e5a13"
-    ],
-    "top_ngrams": [
-      {
-        "sequence": [
-          "h:8a3f0c2db14e9077a45c2901bb6f3c01",
-          "h:b104d18e5fa3c9028877123abcd45ef0"
+    "metalog_version": "0.1.1",
+    "producer": {
+        "name": "insight",
+        "version": "0.1.0",
+        "implementation_uri": "https://github.com/coderoast-dev/InSight"
+    },
+    "window": {
+        "start": "2026-04-24T10:00:00Z",
+        "end": "2026-04-24T10:05:00Z",
+        "duration_seconds": 300,
+        "lines_observed": 184273
+    },
+    "source": {
+        "service": "checkout-api",
+        "fleet": "prod-eu-west",
+        "host_count": 12,
+        "tags": {
+            "env": "prod",
+            "region": "eu-west-3"
+        }
+    },
+    "stats": {
+        "unique_templates": 87,
+        "top_k_size": 64,
+        "tail_count": 4117,
+        "tail_unique": 31,
+        "entropy_bits": 5.83,
+        "top_k": [
+            {
+                "template_id": "h:90585f810bb26f3ccb3193975150dd40",
+                "template": "User <*> logged in from <*>",
+                "count": 12453,
+                "frequency": 0.0676,
+                "level": "INFO"
+            },
+            {
+                "template_id": "h:6c05dc06a24a45a267b3818679e456dd",
+                "template": "GET /api/v1/cart/<*> 200 <*>ms",
+                "count": 9821,
+                "frequency": 0.0533,
+                "level": "INFO"
+            },
+            {
+                "template_id": "h:2c0d325d15f820b8485948ee8c117fd7",
+                "template": "DB connection pool size=<*> in_use=<*>",
+                "count": 5212,
+                "frequency": 0.0283,
+                "level": "DEBUG"
+            },
+            {
+                "template_id": "h:fb7bee89967bc69ed7f5e7008598544b",
+                "template": "Payment <*> failed: <*>",
+                "count": 42,
+                "frequency": 0.000228,
+                "level": "ERROR"
+            }
+        ]
+    },
+    "behavior": {
+        "ngram_size": 2,
+        "top_ngrams_size": 64,
+        "graph_edge_count": 312,
+        "dominant_path": [
+            "h:90585f810bb26f3ccb3193975150dd40",
+            "h:6c05dc06a24a45a267b3818679e456dd",
+            "h:2c0d325d15f820b8485948ee8c117fd7"
         ],
-        "count": 8421,
-        "probability": 0.677
-      }
-    ]
-  },
-  "stability": {
-    "previous_window_end": "2026-04-24T10:00:00Z",
-    "kl_divergence": 0.043,
-    "js_divergence": 0.021,
-    "new_templates": 3,
-    "vanished_templates": 1,
-    "stability_score": 0.94
-  },
-  "extensions": {
-    "org.insight.compression_ratio": {
-      "input_bytes": 41827654,
-      "output_bytes": 3812,
-      "ratio": 10973
+        "top_ngrams": [
+            {
+                "sequence": [
+                    "h:90585f810bb26f3ccb3193975150dd40",
+                    "h:6c05dc06a24a45a267b3818679e456dd"
+                ],
+                "count": 8421,
+                "probability": 0.677
+            }
+        ]
+    },
+    "stability": {
+        "previous_window_end": "2026-04-24T10:00:00Z",
+        "kl_divergence": 0.043,
+        "js_divergence": 0.021,
+        "new_templates": 3,
+        "vanished_templates": 1,
+        "stability_score": 0.94
+    },
+    "extensions": {
+        "org.insight.compression_ratio": {
+            "input_bytes": 41827654,
+            "output_bytes": 3812,
+            "ratio": 10973
+        }
     }
-  }
 }

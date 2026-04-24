@@ -3,8 +3,8 @@
 > A compact, deterministic, vendor-neutral fingerprint format for
 > bounded-size summaries of log streams.
 
-**Status:** Draft v0.1.0 · April 2026
-**Editor:** the InSight project ([github.com/.../InSight](../InSight))
+**Status:** Draft v0.1.1 · April 2026
+**Editor:** the InSight project ([github.com/coderoast-dev/InSight](https://github.com/coderoast-dev/InSight))
 **License:** Spec text — [CC-BY-4.0](LICENSE-SPEC). Reference schemas — [MIT](LICENSE).
 
 ---
@@ -90,7 +90,7 @@ reference implementation when its Phase 3 engine ships
 
 | Implementation | Language | License | Status |
 |---|---|---|---|
-| **InSight** ([repo](../InSight)) | C++23 | BSL-1.1 (planned, at v1) | Phase 3 in progress |
+| **InSight** ([repo](https://github.com/coderoast-dev/InSight)) | C++23 | BSL-1.1 (planned, at v1) | Phase 3 in progress |
 | *Your implementation here* | — | — | PRs welcome |
 
 The spec is deliberately implementation-agnostic. Any language that

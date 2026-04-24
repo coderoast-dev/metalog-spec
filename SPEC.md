@@ -1,4 +1,4 @@
-# MetaLog Specification — v0.1.0 (Draft)
+# MetaLog Specification — v0.1.1 (Draft)
 
 > **Status:** Draft. Subject to incompatible change until v1.0.
 > **Cross-reference:** [`RATIONALE.md`](RATIONALE.md) for *why*
@@ -123,8 +123,16 @@ how often*, in bounded space.
 
 A producer **MUST** cap the `top_k` array at a fixed size determined
 before window start. The default and **RECOMMENDED** value is
-`k = 256`. Producers **MAY** use a different `k` and **MUST** report
+`k = 64`. Producers **MAY** use a different `k` and **MUST** report
 the value used in `top_k_size`.
+
+The choice of `k = 64` is a deliberate compromise between coverage
+and envelope size; see [§11 Size budget](#11-size-budget) for the
+math and [`RATIONALE.md` §R3](RATIONALE.md#r3-why-a-fixed-top-k--tail-summary-not-a-full-histogram)
+for the reasoning. Producers targeting edge / ultra-compact
+deployments **SHOULD** use `k = 16`. Producers targeting wide
+high-cardinality services **MAY** use `k = 256` and accept the
+larger envelope.
 
 The remaining templates **MUST** be summarised into `tail_count` and
 `tail_unique`. This guarantees a MetaLog has bounded size regardless
@@ -135,10 +143,12 @@ of input cardinality.
 `template_id` is a stable, content-derived identifier:
 
 ```
-template_id = "h:" + lower_hex(BLAKE3-128(template_string))
+template_id = "h:" + lower_hex(SHA-256(template_string)[0:16])
 ```
 
-- The hash function **MUST** be BLAKE3 truncated to 128 bits, encoded
+- The hash function **MUST** be SHA-256 over the UTF-8 bytes of the
+  canonical template string. The 32-byte digest **MUST** be
+  truncated to its first 16 bytes (the leading 128 bits) and encoded
   as 32 lowercase hex characters, prefixed with `"h:"`.
 - The input **MUST** be the UTF-8 bytes of the canonical template
   string with placeholders normalised to `<*>` and surrounding
@@ -147,11 +157,17 @@ template_id = "h:" + lower_hex(BLAKE3-128(template_string))
   **MUST** compute the same `template_id`. This is what makes
   MetaLogs comparable across implementations.
 
+SHA-256 is chosen over faster alternatives (BLAKE3, xxh3) because it
+is available in every mainstream language standard library, removing
+any packaging or supply-chain friction for implementers. See
+[`RATIONALE.md` §R2](RATIONALE.md#r2-why-sha-25616-for-template_id)
+for the rationale and the alternatives that were rejected.
+
 The `"h:"` prefix is reserved for hash-based IDs. Other prefixes are
 reserved for future ID schemes; consumers **MUST** treat unknown
-prefixes as opaque opaque identifiers and **MUST NOT** assume two
-IDs refer to the same template unless their full strings (including
-prefix) are equal.
+prefixes as opaque identifiers and **MUST NOT** assume two IDs refer
+to the same template unless their full strings (including prefix)
+are equal.
 
 ### 3.3 Frequency precision
 
@@ -305,3 +321,57 @@ MAJOR.
   treated as authoritative for security decisions (e.g. "did host X
   emit template Y" — the answer is "probably yes" or "probably no",
   not "definitely").
+
+---
+
+## 11. Size budget
+
+This section is **informative**. It explains how the spec achieves
+the headline "bounded-size" property and gives implementers an
+honest picture of what envelopes to expect.
+
+### Per-entry cost
+
+A single `top_k` entry, JSON-encoded with no whitespace, costs
+roughly:
+
+| Field | Bytes |
+|---|---|
+| `template_id` (`"h:"` + 32 hex) | ~40 |
+| `template` (typical skeleton, 40–80 chars) | ~50–100 |
+| `count` + `frequency` + optional `level` | ~30 |
+| JSON syntax overhead (quotes, commas, braces) | ~30 |
+| **Total per entry** | **~150–200** |
+
+### Envelope size by `k`
+
+With the fixed envelope (~400 bytes for `metalog_version`,
+`producer`, `window`, `source`, the optional blocks' framing) plus
+`k` entries:
+
+| `k` | Approx envelope | Recommended for |
+|---|---|---|
+| 16  | ~3 KB    | Edge / ultra-compact deployments |
+| 32  | ~5 KB    | Compact deployments |
+| **64**  | **~10 KB**   | **Default — covers ~95% of Zipfian log streams** |
+| 128 | ~20 KB   | Wide services |
+| 256 | ~40 KB   | High-cardinality / forensic use |
+
+Real log streams follow a Zipfian distribution: the top 64 templates
+typically account for 95–99% of all observations. Going past `k = 64`
+gives diminishing returns on coverage at significant cost in
+envelope size.
+
+### Reaching the 4 KB / 1M-lines target
+
+The headline "≤ 4 KB per MetaLog covering ≥ 1 M log lines" target
+requires either:
+
+1. `k ≤ 32` with the standard envelope, **or**
+2. A future v0.2 "id-only" mode that omits `template` strings from
+   `top_k` entries and ships a separate dictionary mapping
+   `template_id` → `template`. Reserved for v0.2.
+
+Producers **SHOULD** report their actual envelope size in
+`extensions.org.insight.envelope_bytes` (or equivalent) so consumers
+can track the compression ratio achieved on real workloads.

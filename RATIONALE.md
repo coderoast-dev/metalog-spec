@@ -33,15 +33,25 @@ JSON.
 
 ---
 
-## R2. Why BLAKE3-128 for `template_id`?
+## R2. Why SHA-256[:16] for `template_id`?
 
-**Decided:** `"h:" + lower_hex(BLAKE3-128(canonical_template_utf8))`.
+**Decided:** `"h:" + lower_hex(SHA-256(canonical_template_utf8)[0:16])`.
 
 **Why:**
-- BLAKE3 is fast (faster than SHA-256, faster than MD5 on modern
-  CPUs), parallelisable, and has a strong security margin.
-- 128 bits gives a collision probability of ~10⁻¹⁹ at 10⁹ distinct
-  templates per producer — far below the relevant threshold.
+- SHA-256 is in **every** mainstream language standard library:
+  Python `hashlib.sha256`, Go `crypto/sha256`, Rust `sha2`,
+  Java `MessageDigest.getInstance("SHA-256")`, Node `crypto.createHash`,
+  Web Crypto `crypto.subtle.digest('SHA-256', ...)`, every C/C++
+  project that links openssl. Zero packaging friction for
+  implementers — the single biggest factor in spec adoption.
+- 128 bits of output gives a collision probability of ~10⁻¹⁹ at
+  10⁹ distinct templates per producer — far below the relevant
+  threshold.
+- SHA-256 is a conservative choice that passes any security review
+  without questions.
+- Computational cost is irrelevant: `template_id` is computed once
+  per *unique* template per producer (typically a few thousand
+  total), not once per log line.
 - The `"h:"` prefix reserves the namespace so future ID schemes
   (e.g. content + parameter mask, or learned embeddings) can coexist
   without breaking parsers.
@@ -51,33 +61,55 @@ JSON.
   internally. Fatal flaw: not portable across processes, restarts,
   or producers. Today's `EventID 17` is meaningless in tomorrow's
   MetaLog. Rejected for the *cross-implementation* requirement.
-- *SHA-256*: 64 hex characters, double the size. No security benefit
-  at the threat model (we're not authenticating, we're identifying).
+- *BLAKE3-128*: faster than SHA-256, with a strong security margin,
+  but **not in any language standard library** and (as of v0.1.1)
+  not in Conan Center. Adopting it requires every implementer to
+  vendor or package BLAKE3 themselves. The packaging cost outweighs
+  the perf win at template-creation rate. Originally chosen in v0.1.0
+  draft, replaced in v0.1.1 after first-contact with the C++
+  ecosystem revealed the gap. May be revisited if/when BLAKE3
+  becomes universally packaged.
+- *xxh3-128*: fastest of the three, but not cryptographic. SHA-256
+  is conservative enough to never be questioned in a security
+  review; xxh3 invites the question.
 - *MD5*: cryptographically broken. Identification doesn't strictly
   need crypto strength, but defaulting to a broken primitive
   invites questions we don't want to answer in customer security
   reviews.
-- *xxhash / cityhash*: faster than BLAKE3 by ~10%, but no
-  parallelism story and weaker security margin. The 10% never
-  matters because templates are extracted at log-line rate, not
-  at hash-rate.
+- *Full SHA-256 (32 hex chars)*: doubles the size of every
+  `template_id` for no collision-resistance benefit at the relevant
+  scale.
 
 ---
 
 ## R3. Why a fixed top-K + tail summary, not a full histogram?
 
-**Decided:** `top_k` (default 256) + `tail_count` + `tail_unique`.
+**Decided:** `top_k` (default 64) + `tail_count` + `tail_unique`.
 
 **Why:**
 - The MetaLog **must** have a bounded size. A real production
   service has 1–5 K unique templates over 5 minutes. A naive full
-  histogram blows the 4 KB budget.
+  histogram blows the envelope budget.
 - Top-K compression is information-theoretically optimal for the
-  use case: the top 256 templates almost always cover ≥ 95% of
+  use case: the top 64 templates almost always cover ≥ 95% of
   observations in real log streams (Zipfian distribution).
 - The tail summary preserves *that there is* a tail, which is
   enough for divergence detection (a sudden change in `tail_unique`
   is a real signal).
+- Misra-Gries and SpaceSaving are well-studied streaming
+  algorithms (~200 LoC each) that compute top-K in one pass with
+  bounded memory. Implementable in any language.
+
+**Why k = 64 specifically (and not 256 as in v0.1.0 draft):**
+- 256 entries × ~150 bytes each = ~40 KB envelope. Blows the 4 KB
+  headline target by 10× and over-shoots even a generous "tens of
+  KB" budget.
+- 64 entries × ~150 bytes = ~10 KB envelope. Comfortable, and the
+  Zipfian coverage at 64 is already ≥ 95% on real logs.
+- The 4 KB target is reachable at k = 32, or with the future v0.2
+  "id-only" mode that omits template strings.
+- v0.1.0 draft used 256 as the recommended default; v0.1.1 lowered
+  it after the size-budget math (now spec §11) was made explicit.
 - Misra-Gries and SpaceSaving are well-studied streaming
   algorithms (~200 LoC each) that compute top-K in one pass with
   bounded memory. Implementable in any language.

@@ -1,139 +1,296 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://metalog-spec.org/schema/metalog.v0.schema.json",
-  "title": "MetaLog v0",
-  "description": "A bounded-size statistical fingerprint of a window of log behaviour. See https://github.com/.../metalog-spec/blob/main/SPEC.md",
-  "type": "object",
-  "additionalProperties": true,
-  "required": ["metalog_version", "producer", "window", "source", "stats"],
-  "properties": {
-    "metalog_version": {
-      "type": "string",
-      "pattern": "^0\\.[0-9]+\\.[0-9]+$",
-      "description": "SemVer string, MAJOR=0 for this schema."
-    },
-    "producer": {
-      "type": "object",
-      "required": ["name", "version"],
-      "properties": {
-        "name":               { "type": "string", "minLength": 1 },
-        "version":            { "type": "string", "minLength": 1 },
-        "implementation_uri": { "type": "string", "format": "uri" }
-      },
-      "additionalProperties": false
-    },
-    "window": {
-      "type": "object",
-      "required": ["start", "end", "duration_seconds", "lines_observed"],
-      "properties": {
-        "start":            { "type": "string", "format": "date-time" },
-        "end":              { "type": "string", "format": "date-time" },
-        "duration_seconds": { "type": "integer", "minimum": 1 },
-        "lines_observed":   { "type": "integer", "minimum": 0 }
-      },
-      "additionalProperties": false
-    },
-    "source": {
-      "type": "object",
-      "properties": {
-        "service":    { "type": "string" },
-        "fleet":      { "type": "string" },
-        "host_count": { "type": "integer", "minimum": 0 },
-        "tags": {
-          "type": "object",
-          "additionalProperties": { "type": "string" }
-        }
-      },
-      "additionalProperties": false
-    },
-    "stats": {
-      "type": "object",
-      "required": ["unique_templates", "top_k", "top_k_size", "tail_count", "tail_unique"],
-      "properties": {
-        "unique_templates": { "type": "integer", "minimum": 0 },
-        "top_k_size":       { "type": "integer", "minimum": 1 },
-        "tail_count":       { "type": "integer", "minimum": 0 },
-        "tail_unique":      { "type": "integer", "minimum": 0 },
-        "entropy_bits":     { "type": "number",  "minimum": 0 },
-        "top_k": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["template_id", "template", "count", "frequency"],
-            "properties": {
-              "template_id": { "type": "string", "pattern": "^[a-z]+:.+$" },
-              "template":    { "type": "string", "minLength": 1 },
-              "count":       { "type": "integer", "minimum": 0 },
-              "frequency":   { "type": "number",  "minimum": 0, "maximum": 1 },
-              "level":       { "type": "string" }
-            },
-            "additionalProperties": false
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    "behavior": {
-      "type": "object",
-      "required": ["ngram_size", "top_ngrams", "top_ngrams_size"],
-      "properties": {
-        "ngram_size":      { "type": "integer", "minimum": 2 },
-        "top_ngrams_size": { "type": "integer", "minimum": 1 },
-        "graph_edge_count":{ "type": "integer", "minimum": 0 },
-        "dominant_path": {
-          "type": "array",
-          "items": { "type": "string", "pattern": "^[a-z]+:.+$" }
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://metalog-spec.org/schema/metalog.v0.schema.json",
+    "title": "MetaLog v0",
+    "description": "A bounded-size statistical fingerprint of a window of log behaviour. See https://github.com/coderoast-dev/metalog-spec/blob/main/SPEC.md",
+    "type": "object",
+    "additionalProperties": true,
+    "required": [
+        "metalog_version",
+        "producer",
+        "window",
+        "source",
+        "stats"
+    ],
+    "properties": {
+        "metalog_version": {
+            "type": "string",
+            "pattern": "^0\\.[0-9]+\\.[0-9]+$",
+            "description": "SemVer string, MAJOR=0 for this schema."
         },
-        "top_ngrams": {
-          "type": "array",
-          "items": {
+        "producer": {
             "type": "object",
-            "required": ["sequence", "count", "probability"],
+            "required": [
+                "name",
+                "version"
+            ],
             "properties": {
-              "sequence": {
-                "type": "array",
-                "minItems": 2,
-                "items": { "type": "string", "pattern": "^[a-z]+:.+$" }
-              },
-              "count":       { "type": "integer", "minimum": 0 },
-              "probability": { "type": "number",  "minimum": 0, "maximum": 1 }
+                "name": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "version": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "implementation_uri": {
+                    "type": "string",
+                    "format": "uri"
+                }
             },
             "additionalProperties": false
-          }
+        },
+        "window": {
+            "type": "object",
+            "required": [
+                "start",
+                "end",
+                "duration_seconds",
+                "lines_observed"
+            ],
+            "properties": {
+                "start": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "end": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "duration_seconds": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "lines_observed": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            },
+            "additionalProperties": false
+        },
+        "source": {
+            "type": "object",
+            "properties": {
+                "service": {
+                    "type": "string"
+                },
+                "fleet": {
+                    "type": "string"
+                },
+                "host_count": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "tags": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "stats": {
+            "type": "object",
+            "required": [
+                "unique_templates",
+                "top_k",
+                "top_k_size",
+                "tail_count",
+                "tail_unique"
+            ],
+            "properties": {
+                "unique_templates": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "top_k_size": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "tail_count": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "tail_unique": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "entropy_bits": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "top_k": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "template_id",
+                            "template",
+                            "count",
+                            "frequency"
+                        ],
+                        "properties": {
+                            "template_id": {
+                                "type": "string",
+                                "pattern": "^[a-z]+:.+$"
+                            },
+                            "template": {
+                                "type": "string",
+                                "minLength": 1
+                            },
+                            "count": {
+                                "type": "integer",
+                                "minimum": 0
+                            },
+                            "frequency": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                            },
+                            "level": {
+                                "type": "string"
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "behavior": {
+            "type": "object",
+            "required": [
+                "ngram_size",
+                "top_ngrams",
+                "top_ngrams_size"
+            ],
+            "properties": {
+                "ngram_size": {
+                    "type": "integer",
+                    "minimum": 2
+                },
+                "top_ngrams_size": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "graph_edge_count": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "dominant_path": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "pattern": "^[a-z]+:.+$"
+                    }
+                },
+                "top_ngrams": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "sequence",
+                            "count",
+                            "probability"
+                        ],
+                        "properties": {
+                            "sequence": {
+                                "type": "array",
+                                "minItems": 2,
+                                "items": {
+                                    "type": "string",
+                                    "pattern": "^[a-z]+:.+$"
+                                }
+                            },
+                            "count": {
+                                "type": "integer",
+                                "minimum": 0
+                            },
+                            "probability": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 1
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "stability": {
+            "type": "object",
+            "required": [
+                "previous_window_end"
+            ],
+            "properties": {
+                "previous_window_end": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "kl_divergence": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "js_divergence": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                },
+                "new_templates": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "vanished_templates": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "stability_score": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                }
+            },
+            "additionalProperties": false
+        },
+        "attribution": {
+            "type": "object",
+            "required": [
+                "dimension",
+                "sketch_type",
+                "sketch_params",
+                "encoded"
+            ],
+            "properties": {
+                "dimension": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "sketch_type": {
+                    "type": "string",
+                    "enum": [
+                        "count_min",
+                        "exact",
+                        "topk_per_dim"
+                    ]
+                },
+                "sketch_params": {
+                    "type": "object"
+                },
+                "encoded": {
+                    "type": "string",
+                    "pattern": "^base64:"
+                }
+            },
+            "additionalProperties": false
+        },
+        "extensions": {
+            "type": "object",
+            "patternProperties": {
+                "^[a-z][a-z0-9_-]*(\\.[a-z][a-z0-9_-]*)+$": {}
+            },
+            "additionalProperties": false
         }
-      },
-      "additionalProperties": false
-    },
-    "stability": {
-      "type": "object",
-      "required": ["previous_window_end"],
-      "properties": {
-        "previous_window_end": { "type": "string", "format": "date-time" },
-        "kl_divergence":       { "type": "number", "minimum": 0 },
-        "js_divergence":       { "type": "number", "minimum": 0, "maximum": 1 },
-        "new_templates":       { "type": "integer", "minimum": 0 },
-        "vanished_templates":  { "type": "integer", "minimum": 0 },
-        "stability_score":     { "type": "number", "minimum": 0, "maximum": 1 }
-      },
-      "additionalProperties": false
-    },
-    "attribution": {
-      "type": "object",
-      "required": ["dimension", "sketch_type", "sketch_params", "encoded"],
-      "properties": {
-        "dimension":     { "type": "string", "minLength": 1 },
-        "sketch_type":   { "type": "string", "enum": ["count_min", "exact", "topk_per_dim"] },
-        "sketch_params": { "type": "object" },
-        "encoded":       { "type": "string", "pattern": "^base64:" }
-      },
-      "additionalProperties": false
-    },
-    "extensions": {
-      "type": "object",
-      "patternProperties": {
-        "^[a-z][a-z0-9_-]*(\\.[a-z][a-z0-9_-]*)+$": {}
-      },
-      "additionalProperties": false
     }
-  }
 }
