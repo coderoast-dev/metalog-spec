@@ -11,6 +11,51 @@ The spec follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.2.0] — 2026-04-27
+
+### Changed (breaking)
+- **`stats.top_k[i].template` is now OPTIONAL** (was required in
+  0.1.x). Producers may emit template strings inline, in a
+  top-level `templates` dedup map, or omit them entirely
+  ("id-only" mode for bandwidth-bound transports). See
+  [SPEC §3.4](SPEC.md#34-template-strings--id-only-mode-and-dedup-map).
+  This was reserved for v0.2 in the 0.1.1 size-budget section
+  and is now realised.
+- **Schema field order** in `metalog.v0.schema.json` updated for
+  the new optional fields. The old schema is retained at the same
+  `$id` (overwritten); pinning to a specific version now MUST be
+  done via `metalog_version` in the document, not the schema URI.
+
+### Added
+- **Top-level `templates` dedup map** (optional) — see SPEC §3.4.
+- **`behavior.dominant_path`** formalised (was emitted by InSight
+  but only present in the example, not the spec text). SPEC §4.1.
+- **`behavior.branching`** array — per-node fanout, total outgoing,
+  Shannon entropy. SPEC §4.2. Lets consumers identify decision
+  points without retrieving the full transition matrix.
+- **`behavior.sessions_observed`** and **`behavior.session_aware`**
+  flags. SPEC §4.3 + §14.
+- **§12 Composition (`compose(A, B) -> C`)** — defines associative
+  merge semantics for sharded ingestion and time-axis rollup.
+- **§13 `MetaLogDiff`** — separate JSON document type for
+  pair-wise comparison; generalises `stability` to arbitrary
+  pairs. New schema at `schema/metalog_diff.v0.schema.json`.
+- **§14 Sessions** — opaque per-producer session keys; n-grams
+  may be computed per-session and aggregated.
+- **Top-level `provenance` array** — set by composers to record
+  the inputs that fed a composed document. SPEC §12.4.
+- **Schema:** `source.host` accepted (already used in
+  `provenance` examples).
+- **Schema:** sibling `schema/metalog_diff.v0.schema.json` for
+  the new diff document type.
+
+### Status
+- `attribution` remains reserved for v1.0.
+- v0.2.x is still draft; MINOR bumps may break compatibility
+  until v1.0.
+
+---
+
 ## [0.1.1] — 2026-04-24
 
 ### Changed

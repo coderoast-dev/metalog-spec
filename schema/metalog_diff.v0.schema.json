@@ -1,0 +1,132 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://metalog-spec.org/schema/metalog_diff.v0.schema.json",
+    "title": "MetaLogDiff v0",
+    "description": "Pair-wise difference between two MetaLog documents (SPEC §13).",
+    "type": "object",
+    "additionalProperties": true,
+    "required": ["diff_version", "current", "previous"],
+    "properties": {
+        "diff_version": {
+            "type": "string",
+            "pattern": "^0\\.[0-9]+\\.[0-9]+$"
+        },
+        "current": {
+            "type": "object",
+            "required": ["window"],
+            "properties": {
+                "window": {
+                    "type": "object",
+                    "required": ["start", "end"],
+                    "properties": {
+                        "start": { "type": "string", "format": "date-time" },
+                        "end": { "type": "string", "format": "date-time" }
+                    },
+                    "additionalProperties": true
+                },
+                "document_id": { "type": "string" }
+            },
+            "additionalProperties": false
+        },
+        "previous": {
+            "type": "object",
+            "required": ["window"],
+            "properties": {
+                "window": {
+                    "type": "object",
+                    "required": ["start", "end"],
+                    "properties": {
+                        "start": { "type": "string", "format": "date-time" },
+                        "end": { "type": "string", "format": "date-time" }
+                    },
+                    "additionalProperties": true
+                },
+                "document_id": { "type": "string" }
+            },
+            "additionalProperties": false
+        },
+        "kl_divergence": { "type": "number", "minimum": 0 },
+        "js_divergence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "stability_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "template_deltas": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["template_id", "previous_count", "current_count", "delta"],
+                "properties": {
+                    "template_id": { "type": "string", "pattern": "^[a-z]+:.+$" },
+                    "previous_count": { "type": "integer", "minimum": 0 },
+                    "current_count": { "type": "integer", "minimum": 0 },
+                    "delta": { "type": "integer" },
+                    "previous_frequency": { "type": "number", "minimum": 0, "maximum": 1 },
+                    "current_frequency": { "type": "number", "minimum": 0, "maximum": 1 }
+                },
+                "additionalProperties": false
+            }
+        },
+        "new_templates": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[a-z]+:.+$" }
+        },
+        "vanished_templates": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[a-z]+:.+$" }
+        },
+        "branching_delta": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["template_id", "previous_entropy_bits", "current_entropy_bits", "delta_bits"],
+                "properties": {
+                    "template_id": { "type": "string", "pattern": "^[a-z]+:.+$" },
+                    "previous_entropy_bits": { "type": "number", "minimum": 0 },
+                    "current_entropy_bits": { "type": "number", "minimum": 0 },
+                    "delta_bits": { "type": "number" }
+                },
+                "additionalProperties": false
+            }
+        },
+        "ngram_delta": {
+            "type": "object",
+            "required": ["ngram_size"],
+            "properties": {
+                "ngram_size": { "type": "integer", "minimum": 2 },
+                "new_ngrams": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "minItems": 2,
+                        "items": { "type": "string", "pattern": "^[a-z]+:.+$" }
+                    }
+                },
+                "vanished_ngrams": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "minItems": 2,
+                        "items": { "type": "string", "pattern": "^[a-z]+:.+$" }
+                    }
+                },
+                "rate_changed": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": ["sequence", "previous_probability", "current_probability", "delta"],
+                        "properties": {
+                            "sequence": {
+                                "type": "array",
+                                "minItems": 2,
+                                "items": { "type": "string", "pattern": "^[a-z]+:.+$" }
+                            },
+                            "previous_probability": { "type": "number", "minimum": 0, "maximum": 1 },
+                            "current_probability": { "type": "number", "minimum": 0, "maximum": 1 },
+                            "delta": { "type": "number" }
+                        },
+                        "additionalProperties": false
+                    }
+                }
+            },
+            "additionalProperties": false
+        }
+    }
+}

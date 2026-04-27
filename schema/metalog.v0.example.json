@@ -1,8 +1,8 @@
 {
-    "metalog_version": "0.1.1",
+    "metalog_version": "0.2.0",
     "producer": {
         "name": "insight",
-        "version": "0.1.0",
+        "version": "0.2.0",
         "implementation_uri": "https://github.com/coderoast-dev/InSight"
     },
     "window": {
@@ -20,6 +20,12 @@
             "region": "eu-west-3"
         }
     },
+    "templates": {
+        "h:90585f810bb26f3ccb3193975150dd40": "User <*> logged in from <*>",
+        "h:6c05dc06a24a45a267b3818679e456dd": "GET /api/v1/cart/<*> 200 <*>ms",
+        "h:2c0d325d15f820b8485948ee8c117fd7": "DB connection pool size=<*> in_use=<*>",
+        "h:fb7bee89967bc69ed7f5e7008598544b": "Payment <*> failed: <*>"
+    },
     "stats": {
         "unique_templates": 87,
         "top_k_size": 64,
@@ -29,28 +35,24 @@
         "top_k": [
             {
                 "template_id": "h:90585f810bb26f3ccb3193975150dd40",
-                "template": "User <*> logged in from <*>",
                 "count": 12453,
                 "frequency": 0.0676,
                 "level": "INFO"
             },
             {
                 "template_id": "h:6c05dc06a24a45a267b3818679e456dd",
-                "template": "GET /api/v1/cart/<*> 200 <*>ms",
                 "count": 9821,
                 "frequency": 0.0533,
                 "level": "INFO"
             },
             {
                 "template_id": "h:2c0d325d15f820b8485948ee8c117fd7",
-                "template": "DB connection pool size=<*> in_use=<*>",
                 "count": 5212,
                 "frequency": 0.0283,
                 "level": "DEBUG"
             },
             {
                 "template_id": "h:fb7bee89967bc69ed7f5e7008598544b",
-                "template": "Payment <*> failed: <*>",
                 "count": 42,
                 "frequency": 0.000228,
                 "level": "ERROR"
@@ -66,6 +68,22 @@
             "h:6c05dc06a24a45a267b3818679e456dd",
             "h:2c0d325d15f820b8485948ee8c117fd7"
         ],
+        "branching": [
+            {
+                "template_id": "h:90585f810bb26f3ccb3193975150dd40",
+                "fanout": 3,
+                "total_outgoing": 12421,
+                "entropy_bits": 0.918
+            },
+            {
+                "template_id": "h:6c05dc06a24a45a267b3818679e456dd",
+                "fanout": 5,
+                "total_outgoing": 9711,
+                "entropy_bits": 1.812
+            }
+        ],
+        "sessions_observed": 0,
+        "session_aware": false,
         "top_ngrams": [
             {
                 "sequence": [
