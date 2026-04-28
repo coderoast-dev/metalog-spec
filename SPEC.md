@@ -234,6 +234,100 @@ the producer's source code). Otherwise the document is opaque.
 
 ---
 
+### 3.5 Field histograms — wildcard parameter distributions (optional)
+
+> **New in v0.3.0.** Producers **MAY** include per-template, per-wildcard-position
+> value-count histograms inside each `top_k` entry under the key `param_histograms`.
+
+When a Drain-style template has wildcard positions (e.g. `"GET <*> -> <*>"`), the
+histogram re-surfaces the empirical distribution P(value | template_id, param_index)
+so that consumers can detect distribution shifts in individual field slots (e.g. URL
+paths, status codes) rather than only at the template level.
+
+```jsonc
+{
+  "template_id": "h:8a3f...",
+  "count": 12453,
+  "frequency": 0.0676,
+  "param_histograms": [        // array, optional; one entry per tracked wildcard slot
+    {
+      "param_index": 0,        // integer, required, 0-based wildcard position
+      "value_counts": {        // object, required, top-N observed values → count
+        "/api/users": 800,
+        "/health":    200
+      },
+      "total":       1100,     // integer, required, total events for this slot
+                               // MAY exceed sum(value_counts) when the cap is hit
+      "entropy_bits": 0.47,    // number, optional, Shannon entropy over value_counts
+      "approximate_cardinality": 1847  // integer, optional — see §3.5.1
+    },
+    {
+      "param_index": 1,
+      "value_counts": { "200": 950, "500": 50 },
+      "total": 1000,
+      "entropy_bits": 0.31,
+      "approximate_cardinality": 6
+    }
+  ]
+}
+```
+
+- A producer **MUST NOT** emit `param_histograms` for entries not in `top_k`.
+- The `value_counts` map **MUST** be bounded (producers **SHOULD** cap at a
+  configurable limit, default 256, and count overflows in `total`).
+- A consumer **MUST** treat an absent `param_histograms` array as equivalent to
+  an empty array (the slot was not tracked).
+
+#### 3.5.1 `approximate_cardinality`
+
+`approximate_cardinality` is an **OPTIONAL** `uint64` field in each
+`param_histograms` entry. When present, it contains a HyperLogLog estimate of the
+number of **distinct** values observed for that wildcard slot in this window,
+independent of the `value_counts` cap.
+
+Producers **SHOULD** use a HyperLogLog sketch with standard error ≤ 1.5% (precision
+`p = 14`, 16 384 registers). The field is useful for detecting high-cardinality
+injection attacks (§3.5.2) and for cardinality-aware alerting in downstream
+detectors.
+
+- When `approximate_cardinality` is absent, consumers **MUST** use
+  `len(value_counts)` as a lower-bound estimate of distinct values.
+- `approximate_cardinality` **SHOULD** be ≥ `len(value_counts)`.
+- Producers **MUST NOT** report `approximate_cardinality = 0` for a slot that
+  received at least one event.
+
+#### 3.5.2 Cardinality drift and the `MetaLogDiff` extension
+
+A `MetaLogDiff` (§13) that covers documents containing `param_histograms` **SHOULD**
+include a `field_histogram_deltas` array. Each entry carries the per-slot JS
+divergence and — when both documents provide `approximate_cardinality` — a
+cardinality delta:
+
+```jsonc
+"field_histogram_deltas": [
+  {
+    "template_id":             "h:8a3f...",   // required
+    "param_index":             0,             // required
+    "js_divergence":           0.31,          // number, optional
+    "previous_entropy_bits":   0.28,          // number, optional
+    "current_entropy_bits":    0.47,          // number, optional
+    "previous_cardinality":    1847,          // integer, optional
+    "current_cardinality":     183204,        // integer, optional
+    "cardinality_delta":       181357         // integer (signed), optional
+                                              // = current - previous; positive = grew
+  }
+]
+```
+
+- `cardinality_delta` **MUST** equal `current_cardinality - previous_cardinality`
+  (signed, positive = grew, negative = shrank).
+- Consumers detecting high-cardinality injection **SHOULD** alarm when
+  `current_cardinality / previous_cardinality > N` (e.g. N = 10) and
+  `previous_cardinality < threshold` (baseline was low-cardinality).
+- `field_histogram_deltas` **MUST** be sorted by `js_divergence` descending.
+
+---
+
 ## 4. `behavior` — sequence fingerprint (optional)
 
 Captures *how* templates follow each other, beyond raw frequency.
@@ -612,7 +706,19 @@ pairs (not just consecutive windows).
     "rate_changed": [
       { "sequence": ["h:8a3f...", "h:b104..."], "previous_probability": 0.677, "current_probability": 0.412, "delta": -0.265 }
     ]
-  }
+  },
+  "field_histogram_deltas": [          // array, optional — see §3.5.2
+    {
+      "template_id":           "h:8a3f...",
+      "param_index":           0,
+      "js_divergence":         0.31,
+      "previous_entropy_bits": 0.28,
+      "current_entropy_bits":  0.47,
+      "previous_cardinality":  1847,
+      "current_cardinality":   183204,
+      "cardinality_delta":     181357
+    }
+  ]
 }
 ```
 
