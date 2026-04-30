@@ -3,8 +3,8 @@
 > A compact, deterministic, vendor-neutral fingerprint format for
 > bounded-size summaries of log streams.
 
-**Status:** Draft v0.1.1 · April 2026
-**Editor:** the InSight project ([github.com/coderoast-dev/InSight](https://github.com/coderoast-dev/InSight))
+**Status:** Draft v0.2.0 · April 2026
+**Editor:** the InSight project ([github.com/coderoast-dev/insight](https://github.com/coderoast-dev/insight))
 **License:** Spec text — [CC-BY-4.0](LICENSE-SPEC). Reference schemas — [MIT](LICENSE).
 
 ---
@@ -69,6 +69,7 @@ That is what this spec is.
 | [`schema/metalog.v0.example.json`](schema/metalog.v0.example.json) | Worked example MetaLog. |
 | [`CHANGELOG.md`](CHANGELOG.md) | Versioned history of the spec. |
 | [`GOVERNANCE.md`](GOVERNANCE.md) | How the spec evolves; who can propose changes. |
+| [`adr/0001-v1-freeze-policy.md`](adr/0001-v1-freeze-policy.md) | Conditions for freezing the first stable MetaLog version. |
 
 ---
 
@@ -90,7 +91,7 @@ reference implementation when its Phase 3 engine ships
 
 | Implementation | Language | License | Status |
 |---|---|---|---|
-| **InSight** ([repo](https://github.com/coderoast-dev/InSight)) | C++23 | BSL-1.1 (planned, at v1) | Phase 3 in progress |
+| **InSight** ([repo](https://github.com/coderoast-dev/insight)) | C++23 | BSL-1.1 (planned, at v1) | Phase 4/5 in progress |
 | *Your implementation here* | — | — | PRs welcome |
 
 The spec is deliberately implementation-agnostic. Any language that

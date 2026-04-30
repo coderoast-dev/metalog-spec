@@ -75,7 +75,7 @@ top-level fields and **MUST** ignore unknown keys inside
 {
   "name": "insight",          // string, required
   "version": "0.2.0",         // string, required, SemVer
-  "implementation_uri": "https://github.com/.../InSight"  // string, optional
+  "implementation_uri": "https://github.com/.../insight"  // string, optional
 }
 ```
 
